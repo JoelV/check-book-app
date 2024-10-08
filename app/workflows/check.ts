@@ -1,3 +1,4 @@
+import * as R from 'ramda';
 export interface Check {
   id: number;
   number: string;
@@ -7,7 +8,11 @@ export interface Check {
   cleared: boolean;
 }
 
-const checks: Check[] = [
+function createRandomInt() {
+  return Math.floor(Math.random() * 10000000);
+}
+
+let checks: Check[] = [
   {
     id: 1234,
     number: "181",
@@ -20,4 +25,12 @@ const checks: Check[] = [
 
 export const getChecks = async (): Promise<Check[]> => {
   return checks;
+}
+
+export const createCheck = async (createCheckData: Omit<Check, 'id'>): Promise<Check> => {
+  const id = createRandomInt()
+  const newCheck: Check = R.assoc('id', id, createCheckData);
+  const updateChecks = R.append(newCheck, checks);
+  checks = updateChecks;
+  return newCheck;
 }
