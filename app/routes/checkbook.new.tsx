@@ -4,9 +4,32 @@ import { Form } from "@remix-run/react";
 import { requireUserId } from "~/session.server";
 import { createCheck, validateCheckCleared } from "~/workflows/check";
 
-// import { requireUserId } from "~/session.server";
-// import { CreateCheck } from '~/workflows/check'
+interface TextInputProps {
+  type: "number" | "date" | "text" | "checkbox";
+  label: string;
+  name: string;
+  step?: string;
+}
 
+function TextInput({ type, label, name, step }: TextInputProps) {
+  return (
+    <div className="mb-4">
+      <label
+        className="mb-2 flex w-full flex-col gap-1 font-semibold"
+        htmlFor={name}
+      >
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        step={step}
+        className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  );
+}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -15,9 +38,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const checkDate = formData.get("checkDate");
   const checkAmount = formData.get("checkAmount");
   const checkWrittenTo = formData.get("checkWrittenTo");
-  const checkCleared = formData.get("checkCleared")
- console.log({ checkNumber, checkDate, checkAmount, checkWrittenTo, checkCleared }); 
- console.log(typeof checkAmount)
+  const checkCleared = formData.get("checkCleared");
+  console.log({
+    checkNumber,
+    checkDate,
+    checkAmount,
+    checkWrittenTo,
+    checkCleared,
+    userId,
+  });
+  console.log(typeof checkAmount);
   if (typeof checkNumber !== "string" || checkNumber.length === 0) {
     return json(
       { errors: { body: null, title: "Check number is required" } },
@@ -39,7 +69,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  if (typeof checkWrittenTo!== "string" || checkWrittenTo.length === 0) {
+  if (typeof checkWrittenTo !== "string" || checkWrittenTo.length === 0) {
     return json(
       { errors: { body: null, title: "Check written to is required" } },
       { status: 400 },
@@ -53,15 +83,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-
-  await createCheck({ checkNumber, checkDate, checkAmount, checkWrittenTo, checkCleared, userId })
-  return redirect('/checkbook');
+  await createCheck({
+    checkNumber,
+    checkDate,
+    checkAmount,
+    checkWrittenTo,
+    checkCleared,
+    userId,
+  });
+  return redirect("/checkbook");
 };
 
 export default function NewCheckForm() {
   return (
-    <>
-      <h1>Check form</h1>
+    <div className="container mx-auto">
+      <h1 className="text-lg font-bold mb-4">Create a Check Record</h1>
       <Form
         method="post"
         style={{
@@ -71,48 +107,22 @@ export default function NewCheckForm() {
           width: "100%",
         }}
       >
-        <div>
-          <label className="flex w-full flex-col gap-1">
-            <span>Check Number: </span>
-            <input
-              name="checkNumber"
-              type="number"
-              className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            />
+        <TextInput type="number" name="checkNumber" label="Check Number:" />
+        <TextInput type="date" name="checkDate" label="Check Date:" />
+        <TextInput type="number" name="checkAmount" label="Check Amount:" />
+        <TextInput type="text" name="checkWrittenTo" label="Written To:" />
+        <div className="mb-4 flex items-center gap-2">
+          <label
+            className="font-semibold"
+            htmlFor="checkCleared"
+          >
+            Cleared:
           </label>
-          <label className="flex w-full flex-col gap-1">
-            <span>Check Date: </span>
-            <input
-              name="checkDate"
-              type="date"
-              className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            />
-          </label>
-          <label className="flex w-full flex-col gap-1">
-            <span>Check Amount: </span>
-            <input
-              name="checkAmount"
-              type="number"
-              step="0.01"
-              className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            />
-          </label>
-          <label className="flex w-full flex-col gap-1">
-            <span>Written To: </span>
-            <input
-              name="checkWrittenTo"
-              type="text"
-              className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            />
-          </label>
-          <label className="flex w-full flex-col gap-1">
-            <span>Cleared: </span>
-            <input
-              name="checkCleared"
-              type="checkbox"
-              value="true"
-            />
-          </label>
+          <input
+            id="checkCleared"
+            name="checkCleared"
+            type="checkbox"
+          />
         </div>
         <div className="text-right">
           <button
@@ -123,6 +133,6 @@ export default function NewCheckForm() {
           </button>
         </div>
       </Form>
-    </>
+    </div>
   );
 }
